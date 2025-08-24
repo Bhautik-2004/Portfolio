@@ -1,16 +1,16 @@
 /* Light theme */
 .tweet .react-tweet-theme {
-  /* margin is handled by our wrappers */
+  /* margin is handled by wrappers */
   --tweet-container-margin: 0;
   --tweet-font-family: inherit;
   --tweet-font-color: inherit;
 
   /* Light colors */
-  --tweet-bg-color: #fff;
-  --tweet-bg-color-hover: var(--tweet-bg-color);
-  --tweet-color-blue-secondary: theme("colors.gray.600");
-  --tweet-color-blue-secondary-hover: theme("colors.gray.100");
-  --tweet-font-color-secondary: theme("colors.gray.500");
+  --tweet-bg-color: #ffffff;
+  --tweet-bg-color-hover: #ffffff;
+  --tweet-color-blue-secondary: #4B5563; /* gray-600 */
+  --tweet-color-blue-secondary-hover: #F3F4F6; /* gray-100 */
+  --tweet-font-color-secondary: #6B7280; /* gray-500 */
 
   /* Common properties for both themes */
   --tweet-quoted-bg-color-hover: rgba(0, 0, 0, 0.03);
@@ -28,23 +28,20 @@
   --tweet-color-green-primary-hover: rgba(0, 186, 124, 0.1);
   --tweet-twitter-icon-color: var(--tweet-font-color);
   --tweet-verified-old-color: rgb(130, 154, 171);
-  --tweet-verified-blue-color: var(--tweet-color-blue-primary);
+  --tweet-verified-blue-color: #1D4ED8; /* blue-700 */
   --tweet-actions-font-weight: 500;
   --tweet-replies-font-weight: 500;
 }
 
 /* Dark theme */
-.dark {
-  .tweet .react-tweet-theme {
-    /* Dark theme colors */
-    --tweet-bg-color: #222;
-    --tweet-bg-color-hover: var(--tweet-bg-color);
-    --tweet-quoted-bg-color-hover: rgba(255, 255, 255, 0.03);
-    --tweet-border: 1px solid #333;
-    --tweet-color-blue-secondary: theme("colors.white");
-    --tweet-color-blue-secondary-hover: #333;
-    --tweet-font-color-secondary: theme("colors.gray.400");
-  }
+.dark .tweet .react-tweet-theme {
+  --tweet-bg-color: #222222;
+  --tweet-bg-color-hover: #222222;
+  --tweet-quoted-bg-color-hover: rgba(255, 255, 255, 0.03);
+  --tweet-border: 1px solid #333333;
+  --tweet-color-blue-secondary: #FFFFFF; /* white */
+  --tweet-color-blue-secondary-hover: #333333;
+  --tweet-font-color-secondary: #9CA3AF; /* gray-400 */
 }
 
 /* Common styles for both themes */
