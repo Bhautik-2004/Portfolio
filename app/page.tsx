@@ -36,22 +36,6 @@ export default function Page() {
           My Resume
         </a>
       </div>
-      {/* Life Error Minimization Equation */}
-        <div className="overflow-x-auto border border-gray-300 dark:border-gray-700 rounded-lg p-4 mt-10 text-[0.8rem]">
-          <BlockMath>
-            {String.raw`
-              \begin{align*}
-              \underset{\theta}{\text{argmin}} \;\; \text{LifeError}(\theta) &= 
-              \frac{\sum_{i=1}^{n} (\text{Delay}_i + \text{BadDecision}_i + \text{Bugs}_i)}
-              {\sum_{i=1}^{n} (\text{Learning}_i + \text{Projects}_i + \text{Fun}_i)} 
-              + \lambda \cdot \text{Coffee} - \gamma \cdot \text{SleepDeprivation} \\
-              &\
-              \text{s.t. } \text{Motivation} > 0, \quad 
-              \lambda \in \mathbb{R}, \; \gamma \in \mathbb{R}_{+}
-              \end{align*}
-            `}
-          </BlockMath>
-        </div>
     </section>
   );
 }

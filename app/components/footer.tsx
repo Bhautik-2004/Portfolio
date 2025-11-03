@@ -73,6 +73,11 @@ export default function Footer() {
           math={`\\hat{y} = f_{\\theta}(x), \\quad \\theta^{*} = \\arg\\min_{\\theta} \\, \\mathbb{E}_{(x,y) \\sim \\mathcal{D}} \\, \\mathcal{L}(f_{\\theta}(x), y)`}
         />
       </div>
+
+      {/* Quote */}
+      <div className="mt-3 text-[10px] italic text-neutral-600 dark:text-neutral-400">
+        Be passionate about the territory, not the map
+      </div>
     </footer>
   );
 }
