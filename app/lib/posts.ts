@@ -54,6 +54,30 @@ export function getBlogPosts() {
   return getMDXData(path.join(process.cwd(), "content"));
 }
 
+// Get posts from a specific category
+export function getCategoryPosts(category: string) {
+  const categoryPath = path.join(process.cwd(), "content", category);
+  if (!fs.existsSync(categoryPath)) {
+    return [];
+  }
+  return getMDXData(categoryPath).map(post => ({
+    ...post,
+    category
+  }));
+}
+
+// Get all posts from all categories
+export function getAllCategorizedPosts() {
+  const categories = ["books", "papers", "blog", "notes", "experiments"];
+  const allPosts = categories.flatMap(category => getCategoryPosts(category));
+  return allPosts;
+}
+
+// Get posts by multiple categories
+export function getPostsByCategories(categories: string[]) {
+  return categories.flatMap(category => getCategoryPosts(category));
+}
+
 export function formatDate(date: string, includeRelative = false) {
   let currentDate = new Date();
   if (!date.includes("T")) {

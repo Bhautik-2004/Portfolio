@@ -33,7 +33,7 @@ export default function Page() {
           rel="noopener noreferrer"
           className="btn"
         >
-          My Resume
+        Get my CV
         </a>
       </div>
     </section>
