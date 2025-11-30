@@ -28,7 +28,7 @@ export default function Page() {
 
       <div className="mt-6">
         <a
-          href="https://drive.google.com/file/d/1eKCjY-7Z-qR5RRzb6h3-scWqPy3Yk5GA/view?usp=sharing"
+          href="https://drive.google.com/file/d/1i11NCzI3_v-wmaDWg8H7jBxfQJ4DHizB/view?usp=sharing"
           target="_blank"
           rel="noopener noreferrer"
           className="btn"
