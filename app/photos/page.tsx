@@ -11,6 +11,14 @@ export default function Photos() {
   return (
     <section>
       <h1 className="mb-8 text-2xl font-medium">Photos</h1>
+      
+      {/* Warning Notice */}
+      <div className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-800/10 rounded-xl">
+        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+          <strong>Note:</strong> These are placeholder images for demonstration purposes only.
+        </p>
+      </div>
+
       <ImageGrid
         columns={3}
         images={[

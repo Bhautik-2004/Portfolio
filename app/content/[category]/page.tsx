@@ -10,7 +10,7 @@ const categoryInfo = {
     description: "Book reviews, summaries, and key takeaways",
   },
   papers: {
-    title: "Research Papers",
+    title: "Papers",
     description: "Notes and insights from academic papers",
   },
   blog: {

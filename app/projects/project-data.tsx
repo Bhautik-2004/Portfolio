@@ -6,6 +6,12 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+  {
+    title: "FMS - Financial Management System",
+    year: 2025,
+    description: "A financial management system built with Next.js",
+    url: "https://github.com/Bhautik-2004/FMS",
+  },
   // {
   //   title: "Mithril AI",
   //   year: 2024,

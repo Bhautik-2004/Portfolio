@@ -67,12 +67,10 @@ export function Navbar() {
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className={`transition-all flex items-center gap-1 relative px-1
-                ${isContentActive ? "after:block after:h-[2px] after:bg-blue-500 after:absolute after:bottom-0 after:left-0 after:right-0" 
-                  : "hover:text-neutral-800 dark:hover:text-neutral-200"
-                }
+                ${isContentActive ? "" : "hover:text-neutral-800 dark:hover:text-neutral-200"}
               `}
             >
-              Mind Garden
+              🌳 <span className={`${isContentActive ? "after:block after:h-[2px] after:bg-blue-500 after:absolute after:bottom-0 after:left-0 after:right-0 relative" : ""}`}>Mind Garden</span>
               <svg
                 className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
                 fill="none"
