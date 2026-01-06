@@ -70,7 +70,7 @@ export function Navbar() {
                 ${isContentActive ? "" : "hover:text-neutral-800 dark:hover:text-neutral-200"}
               `}
             >
-              🌳 <span className={`${isContentActive ? "after:block after:h-[2px] after:bg-blue-500 after:absolute after:bottom-0 after:left-0 after:right-0 relative" : ""}`}>Mind Garden</span>
+              🌱 <span className={`${isContentActive ? "after:block after:h-[2px] after:bg-blue-500 after:absolute after:bottom-0 after:left-0 after:right-0 relative" : ""}`}>Mind Garden</span>
               <svg
                 className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
                 fill="none"
