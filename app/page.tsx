@@ -31,7 +31,7 @@ export default function Page() {
           href="https://drive.google.com/file/d/1i11NCzI3_v-wmaDWg8H7jBxfQJ4DHizB/view?usp=sharing"
           target="_blank"
           rel="noopener noreferrer"
-          className="btn"
+          className="inline-block rounded-full bg-black text-white dark:bg-white dark:text-black px-6 py-2 font-medium hover:opacity-80 transition-opacity"
         >
         Get my CV
         </a>
