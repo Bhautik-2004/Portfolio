@@ -112,10 +112,10 @@ export default async function ContentPost({ params }: { params: Promise<{ catego
           }),
         }}
       />
-      <h1 className="title text-2xl font-medium max-w-[650px]">
+      <h1 className="title text-2xl font-medium">
         {post.metadata.title}
       </h1>
-      <div className="flex justify-between items-center mt-2 mb-8 text-sm max-w-[650px]">
+      <div className="flex justify-between items-center mt-2 mb-8 text-sm">
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
           {formatDate(post.metadata.publishedAt)}
         </p>
@@ -127,7 +127,7 @@ export default async function ContentPost({ params }: { params: Promise<{ catego
           </p>
         </div>
       )}
-      <article className="prose prose-neutral dark:prose-invert prose-quoteless">
+      <article className="prose prose-neutral dark:prose-invert prose-quoteless max-w-none">
         <CustomMDX source={post.content} />
       </article>
     </section>

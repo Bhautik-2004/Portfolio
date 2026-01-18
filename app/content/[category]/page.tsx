@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { formatDate, getCategoryPosts, getAllCategorizedPosts } from "app/lib/posts";
 import { notFound } from "next/navigation";
+import { CategoryTabs } from "app/components/category-tabs";
 
-const categories = ["books", "papers", "blog", "notes", "experiments", "all"];
+const categories = ["all", "blog", "books", "papers", "notes", "experiments"];
 
 const categoryInfo = {
   books: {
@@ -67,8 +68,25 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
 
   return (
     <section>
-      <h1 className="mb-2 text-2xl font-medium">{info.title}</h1>
-      <p className="mb-8 text-neutral-600 dark:text-neutral-400">{info.description}</p>
+      {/* Page Title */}
+      <div className="mb-8">
+        <h1 className="mb-2 text-2xl font-medium">🌱 Mind Garden</h1>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          A collection of thoughts, learnings, and experiments
+        </p>
+      </div>
+
+      {/* Category Tabs */}
+      <CategoryTabs 
+        currentCategory={category}
+        categories={categories}
+        categoryInfo={categoryInfo}
+      />
+
+      {/* Category Description */}
+      <div className="mb-6">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">{info.description}</p>
+      </div>
       
       <div>
         {posts.length === 0 ? (
