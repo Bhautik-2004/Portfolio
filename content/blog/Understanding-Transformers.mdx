@@ -1,0 +1,867 @@
+---
+title: 'Understanding Transformers'
+publishedAt: '2026-01-19'
+summary: 'Deep dive to the original paper'
+tags: 'Self-Attention, Deep Learning'
+---
+
+<Callout emoji="📑">
+    [Original Paper: Attention is all you need](https://arxiv.org/abs/1706.03762)
+</Callout>
+
+What made ChatGPT famous? Well, it is in the name - Chat Generative Pre-trained Transformer.
+
+What is new with this? Let's see.
+
+***
+
+## Why Transformer models are better than others
+Earlier models like RNN, LSTMs, etc. have major limitation of processing text sequentially,
+which made them slow to process and unstable. Transformers changed this by using Self-Attention, 
+allowing the model to look all tokens and decide what matters which made the overall process faster 
+and easier to scale. It have better context handling.
+
+### How Does a Transformer Actually Predict?
+
+Let's answer the real question: How does this model predict the next token?
+
+At a high level, a Transformer is still doing next-token prediction, just like RNNs and LSTMs.
+Given a sequence of tokens:
+$x_1, x_2, x_3, ..., x_t$, the model learns to predict: $x_{t+1}$, the difference is how it uses the previous tokens to make that prediction.
+
+The key difference is that instead of processing tokens one-by-one in sequence, a Transformer:
+
+* Looks at all previous tokens at the same time.
+* Decides which tokens matter more for the current prediction
+* Combines that information into a single representation
+* Uses it to predict the next token
+* This decision-making process is powered by **self-attention**.
+
+***
+
+Okay, so let's build and understand the Transformer 🤖
+
+_Note: the original paper focuses on machine translation, translating from one language to another. 
+For simplicity, we'll adapt the same ideas to a next-word prediction setup in English._
+
+A big part of this understanding is inspired by [Andrej Karpathy's video](https://youtu.be/kCc8FmEb1nY?si=DB_Qr3o_8A0UUVTg) on the topic, which 
+does a great job breaking things down from first principles.
+
+***
+
+## Terminologies
+<Table 
+  data={{
+    headers: ["Term", "Meaning", "Where you see it"],
+    rows: [
+      [
+        "Token",
+        "Basic unit of text, can be a word or subword",
+        "Tokenizer output",
+      ],
+      [
+        "Embedding",
+        "Vector representation of a token",
+        "`nn.Embedding`",
+      ],
+      [
+        "Sequence length",
+        "Number of tokens in the input sequence",
+        "Tensor shape (T)",
+      ],
+      [
+        "Hidden dimension $(d_{model})$",
+        "Size of token embedding used across the model",
+        "All transformer layers",
+      ],
+      [
+        "Attention",
+        "Mechanism that weighs relationships between tokens",
+        "Attention computation",
+      ],
+      [
+        "Query (Q)",
+        "Represents what a token is looking for",
+        "Linear projection",
+      ],
+      [
+        "Key (K)",
+        "Represents what a token contains",
+        "Linear projection",
+      ],
+      [
+        "Value (V)",
+        "Carries the information of the token",
+        "Linear projection",
+      ],
+      [
+        "Dot product",
+        "Measures similarity between query and key",
+        "$Q \\cdot K^T$",
+      ],
+      [
+        "Softmax",
+        "Normalizes attention scores into probabilities",
+        "Attention weights",
+      ],
+      [
+        "Masking",
+        "Prevents attention to certain positions",
+        "Causal or padding mask",
+      ],
+      [
+        "Multi-head attention",
+        "Multiple attention mechanisms in parallel",
+        "Tensor reshaping and splitting",
+      ],
+      [
+        "Positional encoding",
+        "Adds token order information",
+        "Added to embeddings",
+      ],
+      [
+        "Feedforward network",
+        "MLP applied independently to each token",
+        "After attention block",
+      ],
+      [
+        "Residual connection",
+        "Adds input back to output for stability",
+        "Skip connections",
+      ],
+      [
+        "Layer normalization",
+        "Normalizes activations for stable training",
+        "Before or after sublayers",
+      ],
+      [
+        "Autoregressive modeling",
+        "Predicting next token using previous tokens",
+        "GPT-style training",
+      ],
+    ],
+  }}
+/>
+
+***
+
+### Imports and Setup
+
+```python
+import torch
+import torch.nn as nn
+from torch.nn import functional as F
+```
+
+* `torch`: core PyTorch library
+* `torch.nn`: neural network layers (Linear, Embedding, LayerNorm, etc.)
+* `torch.nn.functional`: stateless functions like `softmax`, `cross_entropy`
+
+***
+### Hyperparameters
+
+```python
+batch_size = 64
+block_size = 256
+max_iters = 5000
+eval_interval = 500
+learning_rate = 3e-4
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+eval_iters = 200
+n_embd = 384
+n_head = 6
+n_layer = 6
+dropout = 0.2
+```
+
+These define the **shape and behavior of the model**:
+
+<Table 
+  data={{
+    headers: ["Parameter", "Meaning"],
+    rows: [
+      [
+        "`batch_size`",
+        "How many sequences are processed in parallel",
+      ],
+      [
+        "`block_size`",
+        "Maximum context length (how far the model can look back)",
+      ],
+      [
+        "`n_embd`",
+        "Size of token embeddings",
+      ],
+      [
+        "`n_head`",
+        "Number of attention heads",
+      ],
+      [
+        "`n_layer`",
+        "Number of Transformer blocks",
+      ],
+      [
+        "`dropout`",
+        "Regularization to prevent overfitting",
+      ],
+    ],
+  }}
+/>
+
+***
+
+### Loading the Dataset (Tiny Shakespeare)
+
+```python
+with open('input.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+```
+
+* Loads the entire Shakespeare dataset as **raw text**
+* This is a **character-level** model, not word-level
+
+***
+
+### Vocabulary Creation
+
+```python
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+```
+
+* `chars`: all unique characters in the dataset
+* `vocab_size`: number of possible tokens
+
+***
+
+### Tokenization (Encoding & Decoding)
+
+```python
+stoi = {ch:i for i,ch in enumerate(chars)}
+itos = {i:ch for i,ch in enumerate(chars)}
+```
+
+* `stoi`: character to integer
+* `itos`: integer to character
+
+```python
+encode = lambda s: [stoi[c] for c in s]
+decode = lambda l: ''.join([itos[i] for i in l])
+```
+
+This allows the model to:
+
+* **read text as numbers**
+* **convert predictions back to text**
+
+***
+
+## Convert Text to Tensor
+
+```python
+data = torch.tensor(encode(text), dtype=torch.long)
+```
+
+Now the entire Shakespeare dataset is a **1D tensor of token IDs**.
+
+***
+
+## Train / Validation Split
+
+```python
+n = int(0.9*len(data))
+train_data = data[:n]
+val_data = data[n:]
+```
+
+* 90% for training
+* 10% for validation
+
+***
+
+## Creating Training Batches
+
+```python
+def get_batch(split):
+```
+
+This function creates **random chunks of text** for training.
+
+```python
+ix = torch.randint(len(data) - block_size, (batch_size,))
+```
+
+Random starting positions.
+
+```python
+x = torch.stack([data[i:i+block_size] for i in ix])
+y = torch.stack([data[i+1:i+block_size+1] for i in ix])
+```
+
+* `x` : input sequence
+* `y` : same sequence, shifted by one character
+
+> The model learns:
+> “Given `hello`, predict `ello!`”
+
+***
+
+## Loss Estimation
+
+```python
+@torch.no_grad()
+def estimate_loss():
+```
+
+* Disables gradient computation (faster, less memory)
+* Evaluates model performance on train and validation data
+
+***
+
+## Self-Attention Head
+
+```python
+class Head(nn.Module):
+```
+
+This is **one self-attention head**.
+
+### Key Components
+
+```python
+self.key = nn.Linear(n_embd, head_size, bias=False)
+self.query = nn.Linear(n_embd, head_size, bias=False)
+self.value = nn.Linear(n_embd, head_size, bias=False)
+```
+
+Each token is projected into:
+
+* **Query** : what am I looking for?
+* **Key** : what do I contain?
+* **Value** : what information do I pass on?
+
+***
+
+### Causal Masking
+
+```python
+self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+```
+
+This creates a **lower triangular matrix** so tokens **cannot see the future**.
+
+> A token at position *t* can only attend to positions ≤ *t*
+
+***
+
+### Attention Calculation
+
+```python
+wei = q @ k.transpose(-2 , -1) * C**-0.5
+```
+
+* Computes similarity between tokens
+* Scaled to stabilize training
+
+```python
+wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))
+```
+
+* Applies causal masking
+
+```python
+wei = F.softmax(wei, dim=-1)
+```
+
+* Converts scores into probabilities
+
+```python
+out = wei @ v
+```
+
+* Weighted sum of values : **context-aware representation**
+
+***
+
+## Multi-Head Attention
+
+```python
+class MultiHeadAttention(nn.Module):
+```
+
+Instead of one attention head, we use **many in parallel**.
+
+```python
+self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+```
+
+Each head focuses on **different relationships**:
+
+* syntax
+* rhythm
+* long-range dependencies
+
+```python
+out = torch.cat([h(x) for h in self.heads], dim=-1)
+```
+
+Concatenates all heads.
+
+```python
+out = self.proj(out)
+```
+
+Projects back to embedding size.
+
+***
+
+## Feed-Forward Network
+
+```python
+class FeedForward(nn.Module):
+```
+
+This is applied **independently to each token**.
+
+```python
+nn.Linear(n_embd, 4 * n_embd)
+nn.ReLU()
+nn.Linear(4 * n_embd, n_embd)
+```
+
+* Expands the representation
+* Applies non-linearity
+* Compresses it back
+
+***
+
+## Transformer Block
+
+```python
+class Block(nn.Module):
+```
+
+A full Transformer block contains:
+
+1. LayerNorm
+2. Self-Attention
+3. Residual connection
+4. Feed-forward network
+5. Another residual connection
+
+```python
+x = x + self.sa(self.ln1(x))
+x = x + self.ffwd(self.ln2(x))
+```
+
+Residuals help:
+
+* Gradient flow
+* Training stability
+
+***
+
+## The Language Model
+
+```python
+class BigramLanguageModel(nn.Module):
+```
+
+Despite the name, this is now a **full Transformer**.
+
+### Embeddings
+
+```python
+self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
+self.position_embedding_table = nn.Embedding(block_size, n_embd)
+```
+
+* Token embeddings : *what* the token is
+* Position embeddings : *where* the token is
+
+```python
+x = tok_emb + pos_emb
+```
+
+Transformers need **position information** explicitly.
+
+***
+
+### Transformer Stack
+
+```python
+self.blocks = nn.Sequential(*[Block(...) for _ in range(n_layer)])
+```
+
+Stacks multiple Transformer blocks.
+
+***
+
+### Output Head
+
+```python
+self.lm_head = nn.Linear(n_embd, vocab_size)
+```
+
+Maps final embeddings : logits over next character.
+
+***
+
+## Loss Computation
+
+```python
+loss = F.cross_entropy(logits, targets)
+```
+
+* Compares predicted next token vs actual next token
+* This is **next-token prediction**
+
+***
+
+## Text Generation
+
+```python
+def generate(self, idx, max_new_tokens):
+```
+
+Autoregressive generation loop:
+
+1. Feed current context
+2. Predict next token
+3. Sample from probability distribution
+4. Append token
+5. Repeat
+
+```python
+idx = torch.cat((idx, idx_next), dim=1)
+```
+
+The model **feeds its own output back as input**.
+
+***
+
+## Training Loop
+
+```python
+optimizer = torch.optim.AdamW(...)
+```
+
+AdamW is standard for Transformers.
+
+```python
+loss.backward()
+optimizer.step()
+```
+
+Classic gradient descent.
+
+***
+
+## Final Text Generation
+
+```python
+context = torch.zeros((1, 1), dtype=torch.long)
+print(decode(m.generate(context, 400)[0].tolist()))
+```
+
+* Starts with a single token
+* Generates 400 characters of Shakespeare-style text
+
+***
+
+### Whole Code
+```python
+import torch
+import torch.nn as nn
+from torch.nn import functional as F
+ 
+batch_size = 64 # how many independent sequences will we process in parallel?
+block_size = 256 # what is the maximum context length for predictions?
+max_iters = 5000
+eval_interval = 500
+learning_rate = 3e-4
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+eval_iters = 200
+n_embd = 384
+n_head = 6
+n_layer = 6
+dropout = 0.2
+ 
+torch.manual_seed(1337)
+ 
+# Tiny Shakespeare Dataset
+# !wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
+ 
+with open('input.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+ 
+print("length of dataset in characters: ", len(text))
+ 
+print(text[:100])
+ 
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+print(''.join(chars))
+print(vocab_size)
+ 
+# create mapping from chars to int
+stoi = {ch:i for i,ch in enumerate(chars)}
+itos = {i:ch for i,ch in enumerate(chars)}
+encode = lambda s: [stoi[c] for c in s] # encoder: chars -> int
+decode = lambda l: ''.join([itos[i] for i in l]) # decoder: int -> chars
+ 
+print(encode("hii there"))
+print(decode(encode("hii there")))
+ 
+# encode entire dataset and store into torch.Tensor
+data = torch.tensor(encode(text), dtype=torch.long)
+print(data.shape, data.dtype)
+print(data[:100])
+ 
+# data splitting (90% train, 10% test)
+n = int(0.9*len(data))
+train_data = data[:n]
+val_data = data[n:]
+ 
+# data loading
+def get_batch(split):
+  data = train_data if split == 'train' else val_data
+  ix = torch.randint(len(data) - block_size, (batch_size,))
+  x = torch.stack([data[i:i+block_size] for i in ix])
+  y = torch.stack([data[i+1:i+block_size+1] for i in ix])
+  x, y = x.to(device), y.to(device)
+  return x, y
+ 
+@torch.no_grad()
+def estimate_loss():
+    out = {}
+    model.eval()
+    for split in ['train', 'val']:
+        losses = torch.zeros(eval_iters)
+        for k in range(eval_iters):
+            X, Y = get_batch(split)
+            logits, loss = model(X, Y)
+            losses[k] = loss.item()
+        out[split] = losses.mean()
+    model.train()
+    return out
+ 
+class Head(nn.Module):
+    """one head of self-attention"""
+    def __init__(self, head_size):
+        super().__init__()
+        self.key = nn.Linear(n_embd, head_size, bias=False)
+        self.query = nn.Linear(n_embd, head_size, bias=False)
+        self.value = nn.Linear(n_embd, head_size, bias=False)
+        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+ 
+        self.dropout = nn.Dropout(dropout)
+ 
+    def forward(self, x):
+        B, T, C = x.shape
+        k = self.key(x)
+        q = self.query(x)
+        # compute attention scores (affinities)
+        wei = q @ k.transpose(-2 , -1) * C**-0.5 # (B, T, C) @ (B, C, T) -> (B, T, T)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) # (B, T, T)
+        wei = F.softmax(wei, dim=-1) # (B, T, T)
+        wei = self.dropout(wei)
+        # perform the weighted aggregation of the values
+        v = self.value(x) # (B, T, C)
+        out = wei @ v # (B, T, T) @ (B, T, C) -> (B, T, C)
+        return out
+ 
+# multi-head attention
+class MultiHeadAttention(nn.Module):
+    """multiple heads of self-attention in parallel"""
+    def __init__(self, num_heads, head_size):
+        super().__init__()
+        self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.proj = nn.Linear(n_embd, n_embd)
+        self.dropout = nn.Dropout(dropout)
+ 
+    def forward(self, x):
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = self.proj(out)
+        return out
+ 
+ 
+class FeedForward(nn.Module):
+    """a simple linear layer followed by a non-linearity"""
+    def __init__(self, n_embd):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),
+            nn.ReLU(),
+            nn.Linear(4 * n_embd, n_embd),
+            nn.Dropout(dropout),
+        )
+ 
+    def forward(self, x):
+        return self.net(x)
+ 
+ 
+class Block(nn.Module):
+    """Transformer block: communication followed by computation"""
+    def __init__(self, n_embd, n_head):
+        """n_embd: embedding dim, n_head: the number of heads we'd like"""
+        super().__init__()
+        head_size = n_embd//n_head
+        self.sa = MultiHeadAttention(n_head, head_size)
+        self.ffwd = FeedForward(n_embd)
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.ln2 = nn.LayerNorm(n_embd)
+ 
+    def forward(self, x):
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ffwd(self.ln2(x))
+        return x
+ 
+ 
+ 
+# super simple bigram model
+class BigramLanguageModel(nn.Module):
+  def __init__(self):
+    super().__init__()
+    # each token directly reads off the logits for the next token from a lookup table
+    self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
+    self.position_embedding_table = nn.Embedding(block_size, n_embd)
+    # self.sa_head = MultiHeadAttention(4, n_embd//4) # i.e., 4 heads of 8 dim self-attention
+    # self.ffwd = FeedForward(n_embd)
+    self.blocks = nn.Sequential(*[Block(n_embd, n_head=n_head) for _ in range(n_layer)])
+    self.ln_f = nn.LayerNorm(n_embd) # final layer norm
+    self.lm_head = nn.Linear(n_embd, vocab_size)
+ 
+  def forward(self, idx, targets=None):
+    B, T = idx.shape
+ 
+    # idx and targets are both (B, T) tensor of integers
+    tok_emb = self.token_embedding_table(idx) # (B, T, C): (Batch, Time, Channel), in this case (4, 8, 65)
+    pos_emb = self.position_embedding_table(torch.arange(T, device=device)) # (T, C)
+    x = tok_emb + pos_emb # (B, T, C)
+    # x = self.sa_head(x) # apply one head of self-attention (B, T, C)
+    # x = self.ffwd(x) # (B, T, C)
+    x = self.blocks(x)
+    x = self.ln_f(x)
+    logits = self.lm_head(x) # (B, T, vocab_size)
+ 
+    if targets is None:
+      loss = None
+    else:
+      B, T, C = logits.shape
+      logits = logits.view(B*T, C)
+      targets = targets.view(B*T)
+      loss = F.cross_entropy(logits, targets)
+ 
+    return logits, loss
+ 
+  def generate(self, idx, max_new_tokens):
+    # idx is (B, T) array of indices in the current context
+    for _ in range(max_new_tokens):
+      # crop idx to the last block_size tokens
+      idx_cond = idx[:, -block_size:]
+      # get the predictions
+      logits, loss = self(idx_cond)
+      # focus only on the last time step
+      logits = logits[:, -1, :] # becomes (B, C)
+      # apply softmax to get probabilities
+      probs = F.softmax(logits, dim=-1) # (B, C)
+      # sample from the distribution
+      idx_next = torch.multinomial(probs, num_samples=1) # (B, 1)
+      # append sampled index to the running sequence
+      idx = torch.cat((idx, idx_next), dim=1) # (B, T+1)
+    return idx
+ 
+model = BigramLanguageModel()
+m = model.to(device)
+ 
+# create a PyTorch optimizer
+optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
+ 
+batch_size = 32
+for iter in range(max_iters):
+    if iter % eval_interval == 0:
+        losses = estimate_loss()
+        print(f'step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}')
+ 
+    # sample a batch of data
+    xb, yb = get_batch('train')
+    logits, loss = model(xb, yb)
+ 
+    # evaluate the loss
+    optimizer.zero_grad(set_to_none=True)
+    loss.backward()
+    optimizer.step()
+ 
+ 
+# generate from the model
+context = torch.zeros((1, 1), dtype=torch.long, device=device)
+print(decode(m.generate(context, max_new_tokens=400)[0].tolist()))
+```
+
+#### Output
+```
+length of dataset in characters:  1115394
+First Citizen:
+Before we proceed any further, hear me speak.
+
+All:
+Speak, speak.
+
+First Citizen:
+You
+
+ !$&',-.3:;?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+65
+[46, 47, 47, 1, 58, 46, 43, 56, 43]
+hii there
+torch.Size([1115394]) torch.int64
+tensor([18, 47, 56, 57, 58,  1, 15, 47, 58, 47, 64, 43, 52, 10,  0, 14, 43, 44,
+        53, 56, 43,  1, 61, 43,  1, 54, 56, 53, 41, 43, 43, 42,  1, 39, 52, 63,
+         1, 44, 59, 56, 58, 46, 43, 56,  6,  1, 46, 43, 39, 56,  1, 51, 43,  1,
+        57, 54, 43, 39, 49,  8,  0,  0, 13, 50, 50, 10,  0, 31, 54, 43, 39, 49,
+         6,  1, 57, 54, 43, 39, 49,  8,  0,  0, 18, 47, 56, 57, 58,  1, 15, 47,
+        58, 47, 64, 43, 52, 10,  0, 37, 53, 59])
+step 0: train loss 4.2846, val loss 4.2820
+step 500: train loss 2.0888, val loss 2.1515
+step 1000: train loss 1.6627, val loss 1.8208
+step 1500: train loss 1.4829, val loss 1.6692
+step 2000: train loss 1.3889, val loss 1.5950
+step 2500: train loss 1.3201, val loss 1.5544
+step 3000: train loss 1.2775, val loss 1.5284
+step 3500: train loss 1.2336, val loss 1.5140
+step 4000: train loss 1.1980, val loss 1.4992
+step 4500: train loss 1.1634, val loss 1.4937
+
+Thy mind the witnoth of much commit turn.
+
+QUEEN MARGARET:
+Nay, by my friend, I beseech you say.
+
+GLOUCESTER:
+Need Lord Burshy, my lord.
+
+GLOUCESTER:
+What dost a cradul sword?
+
+KING EDWARD IV:
+O thy formaids again; even how is need!
+
+GLOUCESTER:
+Turn him up, can mad be ruely father'd,
+The crown of boding exame no more upeal when,
+When would seem as evice by Angelo:
+Now am I heir hand a sistent's s
+
+```
+
+### Final Intuition
+
+**At every step, the Transformer is asking:**
+
+> “Given everything I've seen so far, what is the most likely next character?”
+
+Self-attention decides **what to look at**,
+feed-forward layers decide **how to think about it**,
+and the output head decides **what comes next**.
+

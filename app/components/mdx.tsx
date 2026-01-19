@@ -2,15 +2,17 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
-import { highlight } from "sugar-high";
 import { TweetComponent } from "./tweet";
 import { CaptionComponent } from "./caption";
 import { YouTubeComponent } from "./youtube";
 import { ImageGrid } from "./image-grid";
 import { CopyLinkButton } from "./copy-link-button";
+import { CodeBlock } from "./code-block";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+import rehypePrettyCode from "rehype-pretty-code";
 import "katex/dist/katex.min.css";
+import { InlineMath } from "react-katex";
 
 function CustomLink(props) {
   let href = props.href;
@@ -31,19 +33,66 @@ function RoundedImage(props) {
   return <Image alt={props.alt} className="rounded-lg" {...props} />;
 }
 
-function Code({ children, ...props }) {
-  let codeHTML = highlight(children);
-  return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />;
+function TableCell({ content }) {
+  // If content is not a string, return as is
+  if (typeof content !== "string") {
+    return <>{content}</>;
+  }
+
+  // Regex to match backtick code `...` OR math $...$
+  // Group 1: code content (inside backticks)
+  // Group 2: math content (inside dollars)
+  const regex = /`([^`]+)`|\$([^\$]+)\$/g;
+  
+  const parts: (string | React.ReactNode)[] = [];
+  let lastIndex = 0;
+  let match;
+  let key = 0;
+
+  while ((match = regex.exec(content)) !== null) {
+    // Text before the match
+    if (match.index > lastIndex) {
+      parts.push(content.slice(lastIndex, match.index));
+    }
+
+    if (match[1]) {
+      // Inline Code
+      parts.push(
+        <code
+          key={key++}
+          className="bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded text-sm font-mono"
+        >
+          {match[1]}
+        </code>
+      );
+    } else if (match[2]) {
+      // Inline Math
+      parts.push(<span key={key++}><InlineMath math={match[2]} /></span>);
+    }
+
+    lastIndex = regex.lastIndex;
+  }
+
+  // Remaining text
+  if (lastIndex < content.length) {
+    parts.push(content.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? <>{parts}</> : <>{content}</>;
 }
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
-    <th key={index}>{header}</th>
+    <th key={index}>
+      <TableCell content={header} />
+    </th>
   ));
   let rows = data.rows.map((row, index) => (
     <tr key={index}>
       {row.map((cell, cellIndex) => (
-        <td key={cellIndex}>{cell}</td>
+        <td key={cellIndex}>
+          <TableCell content={cell} />
+        </td>
       ))}
     </tr>
   ));
@@ -113,7 +162,7 @@ let components = {
   StaticTweet: TweetComponent,
   Caption: CaptionComponent,
   YouTube: YouTubeComponent,
-  code: Code,
+  pre: CodeBlock,
   Table,
   del: Strikethrough,
   Callout,
@@ -127,7 +176,18 @@ export function CustomMDX(props) {
       options={{
         mdxOptions: {
           remarkPlugins: [remarkMath],
-          rehypePlugins: [rehypeKatex],
+          rehypePlugins: [
+            rehypeKatex,
+            [
+              rehypePrettyCode,
+              {
+                theme: {
+                  dark: "github-dark",
+                  light: "github-light",
+                },
+              },
+            ],
+          ],
         },
       }}
     />

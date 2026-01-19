@@ -75,7 +75,23 @@ html {
 }
 
 .prose pre {
-  @apply bg-[#F7F7F7] dark:bg-[#181818] rounded-lg overflow-x-auto;
+  @apply rounded-lg overflow-x-auto py-4 px-4;
+  line-height: 1.2;
+  background-color: #f7f7f7 !important;
+  color: var(--shiki-light) !important;
+}
+
+.prose pre code span {
+  color: var(--shiki-light) !important;
+}
+
+.dark .prose pre {
+  background-color: #181818 !important;
+  color: var(--shiki-dark) !important;
+}
+
+.dark .prose pre code span {
+  color: var(--shiki-dark) !important;
 }
 
 .prose code {
@@ -85,7 +101,6 @@ html {
 .prose pre code {
   @apply p-0;
   border: initial;
-  line-height: 1.5;
 }
 
 .prose code span {
@@ -117,6 +132,11 @@ h6 {
 
 .prose-quoteless blockquote p:first-of-type::before,
 .prose-quoteless blockquote p:first-of-type::after {
+  content: none;
+}
+
+.prose code::before,
+.prose code::after {
   content: none;
 }
 
