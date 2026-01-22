@@ -36,10 +36,6 @@
   --sh-entity: #e25a1c;
 }
 
-html {
-  min-width: 360px;
-}
-
 .prose {
   @apply text-[#000000] dark:text-[#FFFFFF];
 }
@@ -172,11 +168,15 @@ input[type="email"] {
   font-weight: 500;
 }
 
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 table {
   display: block;
-  max-width: fit-content;
+  max-width: 100%;
   overflow-x: auto;
-  white-space: nowrap;
 }
 
 .prose .callout > p {

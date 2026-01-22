@@ -19,7 +19,7 @@ export function CodeBlock({ children, ...props }: React.ComponentProps<"pre">) {
   };
 
   return (
-    <div className="relative group my-4">
+    <div className="relative group my-4 -mx-4 px-4 sm:mx-0 sm:px-0">
       <div className="sticky top-0 right-0 z-20 flex justify-end h-0">
         <button
           onClick={copy}
@@ -33,7 +33,7 @@ export function CodeBlock({ children, ...props }: React.ComponentProps<"pre">) {
           )}
         </button>
       </div>
-      <pre ref={preRef} {...props} className={`!my-0 ${props.className || ""}`}>
+      <pre ref={preRef} {...props} className={`!my-0 overflow-x-auto max-w-full ${props.className || ""}`}>
         {children}
       </pre>
     </div>
