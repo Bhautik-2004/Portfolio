@@ -11,7 +11,7 @@ import { CodeBlock } from "./code-block";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import rehypePrettyCode from "rehype-pretty-code";
-import "katex/dist/katex.min.css";
+// import "katex/dist/katex.min.css";
 import { InlineMath } from "react-katex";
 
 function CustomLink(props) {
