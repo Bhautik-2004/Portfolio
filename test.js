@@ -1,0 +1,1 @@
+const fs = require('fs'); const res = fs.readFileSync('.next/server/app/blog/custom-mdx-examples.html', 'utf8'); console.log(res.includes('Error: Table requires data prop'));

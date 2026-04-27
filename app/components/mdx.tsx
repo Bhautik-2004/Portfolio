@@ -176,6 +176,7 @@ export function CustomMDX(props) {
       {...props}
       components={{ ...components, ...(props.components || {}) }}
       options={{
+        blockJS: false, // Enable JavaScript expressions in MDX to fix missing props in custom components
         mdxOptions: {
           remarkPlugins: [remarkMath],
           rehypePlugins: [
