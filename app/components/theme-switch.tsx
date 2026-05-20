@@ -27,6 +27,16 @@ export const ThemeSwitch: React.FC = () => {
     "light"
   );
 
+  const isEditableTarget = (target: EventTarget | null) => {
+    return (
+      target instanceof HTMLElement &&
+      (target.isContentEditable ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT")
+    );
+  };
+
   const getColorPreference = (): "light" | "dark" => {
     if (typeof window !== "undefined") {
       const storedPreference = localStorage.getItem(storageKey);
@@ -69,6 +79,35 @@ export const ThemeSwitch: React.FC = () => {
     localStorage.setItem(storageKey, newTheme);
     reflectPreference(newTheme);
   };
+
+  React.useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        isEditableTarget(event.target) ||
+        event.key.toLowerCase() !== "d"
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      localStorage.setItem(storageKey, newTheme);
+      reflectPreference(newTheme);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentTheme, mounted]);
 
   if (!mounted) {
     return (

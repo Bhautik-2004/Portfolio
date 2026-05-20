@@ -13,7 +13,7 @@ export default function Page() {
         height={160}
         priority
       />
-      <h1 className="mb-8 text-2xl font-medium">Hey there!</h1>
+      <h1 className="mb-8 text-2xl font-medium">Hey there! 👋</h1>
       <div className="prose prose-neutral dark:prose-invert">
         <p>
           I’m a student and developer who loves exploring AI, Machine Learning, and web development. I spend my time building projects that are both fun and practical, from interactive web apps to intelligent models.

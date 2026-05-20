@@ -4,6 +4,30 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  font-family: var(--font-sans), sans-serif;
+}
+
+body {
+  font-family: var(--font-sans), sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif), serif;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono), monospace;
+}
+
 ::selection {
   background-color: #47a3f3;
   color: #fefefe;

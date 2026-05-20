@@ -1,7 +1,7 @@
 import "./globals.css";
 import 'katex/dist/katex.min.css';
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono, Libre_Baskerville } from "next/font/google";
 import { Navbar } from "./components/nav";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -10,7 +10,21 @@ import { ThemeProvider } from "./components/theme-switch";
 import { metaData } from "./lib/config";
 
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const libreBaskerville = Libre_Baskerville({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-serif",
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 export const viewport = {
   width: 'device-width',
@@ -69,7 +83,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.className} light`} // Ensure a default theme class
+      className={`${inter.variable} ${libreBaskerville.variable} ${jetBrainsMono.variable} light`} // Ensure a default theme class
       suppressHydrationWarning // Suppress hydration warnings for dynamic attributes
     >
       <head>
