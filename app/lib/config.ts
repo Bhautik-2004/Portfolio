@@ -8,7 +8,7 @@ export const metaData = {
 };
 
 export const socialLinks = {
-  twitter: "https://x.com/bhautikdeploys",
+  twitter: "https://x.com/bhautikvg",
   github: "https://github.com/bhautik-2004",
   instagram: "https://www.instagram.com/bhautikvaghamshi",
   linkedin: "https://www.linkedin.com/bhautik2004",
