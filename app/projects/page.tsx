@@ -21,16 +21,19 @@ export default function Projects() {
             <Link
               key={index}
               href={project.url}
-              className="flex flex-col space-y-1 mb-5 transition-opacity duration-200 hover:opacity-80"
+              className="block mb-6 transition-opacity duration-200 hover:opacity-80"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                <h2 className="text-black dark:text-white">{project.title}</h2>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  {project.description}
-                </p>
+              <div className="flex items-baseline gap-3 mb-2">
+                <h2 className="text-black dark:text-white font-medium">{project.title}</h2>
+                <span className="text-neutral-500 dark:text-neutral-500 text-sm whitespace-nowrap">
+                  {project.year}
+                </span>
               </div>
+              <p className="text-neutral-600 dark:text-neutral-400">
+                {project.description}
+              </p>
             </Link>
           ))
         )}
