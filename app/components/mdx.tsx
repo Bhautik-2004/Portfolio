@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MDXRemote } from "next-mdx-remote/rsc";
+import { compileMDX } from "next-mdx-remote/rsc";
 import { TweetComponent } from "./tweet";
 import { CaptionComponent } from "./caption";
 import { YouTubeComponent } from "./youtube";
@@ -170,29 +170,35 @@ let components = {
   Callout,
 };
 
-export function CustomMDX(props) {
-  return (
-    <MDXRemote
-      {...props}
-      components={{ ...components, ...(props.components || {}) }}
-      options={{
-        blockJS: false, // Enable JavaScript expressions in MDX to fix missing props in custom components
-        mdxOptions: {
-          remarkPlugins: [remarkMath],
-          rehypePlugins: [
-            rehypeKatex,
-            [
-              rehypePrettyCode,
-              {
-                theme: {
-                  dark: "github-dark",
-                  light: "github-light",
-                },
+export async function CustomMDX(props) {
+  const { source, components: customComponents, ...rest } = props;
+
+  const { content } = await compileMDX({
+    source,
+    ...rest,
+    components: { ...components, ...(customComponents || {}) },
+    options: {
+      // next-mdx-remote v6 blocks JS expressions by default.
+      // We need object/array props in MDX components (Table, ImageGrid, etc.).
+      blockJS: false,
+      blockDangerousJS: true,
+      mdxOptions: {
+        remarkPlugins: [remarkMath],
+        rehypePlugins: [
+          rehypeKatex,
+          [
+            rehypePrettyCode,
+            {
+              theme: {
+                dark: "github-dark",
+                light: "github-light",
               },
-            ],
+            },
           ],
-        },
-      }}
-    />
-  );
+        ],
+      },
+    },
+  });
+
+  return content;
 }
