@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { compileMDX } from "next-mdx-remote/rsc";
-import { TweetComponent } from "./tweet";
+
 import { CaptionComponent } from "./caption";
 import { YouTubeComponent } from "./youtube";
 import { ImageGrid } from "./image-grid";
@@ -161,7 +161,7 @@ let components = {
   Image: RoundedImage,
   ImageGrid,
   a: CustomLink,
-  StaticTweet: TweetComponent,
+
   Caption: CaptionComponent,
   YouTube: YouTubeComponent,
   pre: CodeBlock,
