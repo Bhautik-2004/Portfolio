@@ -28,7 +28,7 @@ export default function Page() {
 
       <div className="mt-6">
         <a
-          href="https://drive.google.com/file/d/14krmyCPwdxKkyqmRGU9tPsHxWzdtdNe9/view?usp=sharing"
+          href="https://drive.google.com/file/d/1JnFSTV3rd6OtZmhVAe0-_YUSjqfsA6tZ/view?usp=sharing"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block rounded-full bg-black text-white dark:bg-white dark:text-black px-6 py-2 font-medium hover:opacity-80 transition-opacity"
